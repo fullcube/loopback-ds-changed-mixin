@@ -1,0 +1,42 @@
+{
+  "name": "loopback-ds-changed-mixin",
+  "version": "1.0.0",
+  "description": "A mixin to enable loopback Model properties to be marked as changed.",
+  "main": "index.js",
+  "keywords": [
+    "loopback",
+    "strongloop"
+  ],
+  "author": "Tom Kirkpatrick",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fullcube/loopback-ds-changed-mixin.git"
+  },
+  "dependencies": {
+    "debug": "2.x",
+    "lodash": "latest"
+  },
+  "peerDependencies": {
+    "loopback-datasource-juggler": ">=2.18.1"
+  },
+  "devDependencies": {
+    "bluebird": "2.9.24",
+    "chai": "latest",
+    "loopback": "2.x",
+    "loopback-testing": "1.x",
+    "mocha": "2.x",
+    "jscs": "1.13.x",
+    "jshint": "latest",
+    "mocha": "latest",
+    "mocha-sinon": "latest",
+    "sinon": "latest",
+    "sinon-chai": "latest"
+  },
+  "scripts": {
+    "lint": "jscs index.js && jshint index.js",
+    "test": "mocha -R spec --timeout 10000 test.js",
+    "test:watch": "npm run test -- -w",
+    "pretest": "npm run lint"
+  }
+}

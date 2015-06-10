@@ -70,7 +70,7 @@ describe('loopback datasource changed property', function() {
   describe('when called internally', function() {
     lt.beforeEach.givenModel('person', {name:'Joe Blogs', nickname: 'joe', age: 21, status: 'active'}, 'joe');
     lt.beforeEach.givenModel('person', {name:'Bilbo Baggins', nickname: 'bilbo', age: 99, status: 'active'}, 'bilbo');
-    lt.beforeEach.givenModel('person', {name:'Tina Turner', nickname: 'tina', age: 80, status: 'active'}, 'tina');
+    lt.beforeEach.givenModel('person', {name:'Tina Turner', nickname: 'tina', age: 80, status: 'pending'}, 'tina');
 
     describe('Model.create', function() {
       it('should not run callback when creating new instances.', function(done) {
@@ -81,12 +81,23 @@ describe('loopback datasource changed property', function() {
     });
 
     describe('Model.updateAttribute', function() {
-      it('should run the callback after updating a watched property on a single model.', function(done) {
+      it('should not run callback if no watched properties are updated', function(done) {
+        var self = this;
+        this.joe.updateAttribute('name', 'Newname')
+        .then(function(res) {
+          expect(self.spy).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should run the callback after updating a watched property', function(done) {
         var self = this;
         this.joe.updateAttribute('age', 22)
         .then(function(res) {
           expect(res.age).to.equal(22);
           expect(self.spy).to.have.been.called;
+          expect(self.spy).to.have.been.calledWith([self.joe.id]);
           done();
         })
         .catch(done);
@@ -94,13 +105,24 @@ describe('loopback datasource changed property', function() {
     });
 
     describe('Model.updateAttributes', function() {
-      it('should execute the callback after updating multiple watched properties on a single model.', function(done) {
+      it('should not run callback if no watched properties are updated', function(done) {
+        var self = this;
+        this.joe.updateAttributes({'name': 'Newname'})
+        .then(function(res) {
+          expect(self.spy).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should execute the callback after updating watched properties', function(done) {
         var self = this;
         this.joe.updateAttributes({'age': 22, nickname: 'somename'})
         .then(function(res) {
           expect(res.age).to.equal(22);
           expect(res.nickname).to.equal('somename');
           expect(self.spy).to.have.been.called;
+          expect(self.spy).to.have.been.calledWith([self.joe.id]);
           done();
         })
         .catch(done);
@@ -108,27 +130,73 @@ describe('loopback datasource changed property', function() {
     });
 
     describe('Model.save', function() {
-      it('should execute the callback after updating multiple watched properties on a single model.', function(done) {
+      it('should not run callback if no watched properties are updated', function(done) {
+        var self = this;
+        this.joe.name = 'Newname';
+        this.joe.save()
+        .then(function(res) {
+          expect(self.spy).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should execute the callback after updating watched properties', function(done) {
         var self = this;
         this.joe.age = 22;
         this.joe.nickname = 'somename';
         this.joe.save()
         .then(function(res) {
-          expect(res.age).to.equal(22);
-          expect(res.nickname).to.equal('somename');
           expect(self.spy).to.have.been.called;
+          expect(self.spy).to.have.been.calledWith([self.joe.id]);
           done();
         })
         .catch(done);
       });
     });
-    
-    describe('Model.updateAll', function() {
-      it('should execute the callback after updating multiple watched properties on multiple models.', function(done) {
+
+    describe('Model.upsert', function() {
+      it('should not run callback if no watched properties are updated', function(done) {
         var self = this;
-        this.Person.updateAll(null, {status: 'cancelled'})
+        this.joe.name = 'Newname';
+        this.Person.upsert(this.joe)
+        .then(function(res) {
+          expect(self.spy).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should execute the callback after updating watched properties', function(done) {
+        var self = this;
+        this.joe.status = 'pending';
+        this.Person.upsert(this.joe)
         .then(function(res) {
           expect(self.spy).to.have.been.called;
+          expect(self.spy).to.have.been.calledWith([self.joe.id]);
+          done();
+        })
+        .catch(done);
+      });
+    });
+
+    describe('Model.updateAll', function() {
+      it('should not run callback if no watched properties are updated', function(done) {
+        var self = this;
+        this.Person.updateAll(null, {name: 'Newname'})
+        .then(function(res) {
+          expect(self.spy).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should execute the callback after updating watched properties on multiple models', function(done) {
+        var self = this;
+        this.Person.updateAll(null, {status: 'pending'})
+        .then(function(res) {
+          expect(self.spy).to.have.been.called;
+          expect(self.spy).to.have.been.calledWith([self.joe.id, self.bilbo.id]);
           done();
         })
         .catch(done);

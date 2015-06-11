@@ -68,7 +68,7 @@ function changed(Model, options) {
           Model.getIdName()
         ]
       }).then(function(items) {
-        return options.callback(Model.extractChangedItemIds(items));
+        return Model[options.callback](Model.extractChangedItemIds(items));
       })
       .then(function(res) {
         next();

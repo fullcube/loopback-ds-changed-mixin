@@ -5,7 +5,7 @@ var _ = require('lodash');
 function changed(Model, options) {
   'use strict';
 
-  if(typeof Model[options.callback] !== 'function') {
+  if (typeof Model[options.callback] !== 'function') {
     console.warn('Callback %s is not a model function', options.callback);
   }
 
@@ -72,7 +72,7 @@ function changed(Model, options) {
           Model.getIdName()
         ]
       }).then(function(items) {
-        if(typeof Model[options.callback] !== 'function') return false;
+        if (typeof Model[options.callback] !== 'function') return false;
         return Model[options.callback](Model.extractChangedItemIds(items));
       })
       .then(function(res) {

@@ -25,19 +25,6 @@ describe('loopback datasource changed property', function() {
 
   beforeEach(function(done) {
 
-    // Define a function that should be called when a change is detected.
-    this.basicCallback = function(args, cb) {
-      cb = cb || utils.createPromiseCallback();
-      debug('this.basicCallback() called with %o', args);
-      process.nextTick(function() {
-        cb(null);
-      });
-      return cb.promise;
-    };
-    
-    // Set up a spy so we can check wether our callback has been called.
-    this.spy = sinon.spy(this, 'basicCallback');
-
     // A model with 2 Changed properties.
     var Person = this.Person = loopback.PersistedModel.extend('person', {
       name: String,
@@ -47,7 +34,7 @@ describe('loopback datasource changed property', function() {
     }, {
       mixins: {
         Changed: {
-          callback: this.basicCallback,
+          callback: 'basicCallback',
           properties: {
             nickname: true,
             age: true,
@@ -56,6 +43,19 @@ describe('loopback datasource changed property', function() {
         }
       }
     });
+
+    // Define a function that should be called when a change is detected.
+    Person.basicCallback = function(args, cb) {
+      cb = cb || utils.createPromiseCallback();
+      debug('this.basicCallback() called with %o', args);
+      process.nextTick(function() {
+        cb(null);
+      });
+      return cb.promise;
+    };
+
+    // Set up a spy so we can check wether our callback has been called.
+    this.spy = sinon.spy(Person, 'basicCallback');
 
     Person.attachTo(loopback.memory());
     app.model(Person);

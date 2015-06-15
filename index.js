@@ -113,6 +113,8 @@ function changed(Model, options) {
       }
     });
 
+    if (!fields.or.length) fields = {};
+
     // If there are no property conditions, do nothing.
     if (_.isEmpty(properties)) {
       process.nextTick(function() {

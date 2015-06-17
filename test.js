@@ -21,6 +21,22 @@ global.Promise = require('bluebird');
 // import our Changed mixin.
 require('./')(app);
 
+// Configure datasource
+var dbConnector = null;
+
+var MONGODB_URL = process.env.MONGODB_URL || null;
+if (MONGODB_URL) {
+  debug('Using mongodb datasource %s', MONGODB_URL);
+  var DataSource = require('loopback-datasource-juggler').DataSource;
+  dbConnector = new DataSource({
+    connector: require('loopback-connector-mongodb'),
+    url: MONGODB_URL
+  });
+} else {
+  debug('Using memory datasource');
+  dbConnector = loopback.memory();
+}
+
 describe('loopback datasource changed property', function() {
 
   beforeEach(function(done) {
@@ -57,7 +73,7 @@ describe('loopback datasource changed property', function() {
     // Set up a spy so we can check wether our callback has been called.
     this.spy = sinon.spy(Person, 'basicCallback');
 
-    Person.attachTo(loopback.memory());
+    Person.attachTo(dbConnector);
     app.model(Person);
 
     app.use(loopback.rest());

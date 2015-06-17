@@ -17,17 +17,15 @@
     "debug": "2.x",
     "lodash": "latest"
   },
-  "peerDependencies": {
-    "loopback-datasource-juggler": ">=2.18.1"
-  },
   "devDependencies": {
     "bluebird": "2.9.24",
     "chai": "latest",
-    "loopback": "2.x",
-    "loopback-testing": "1.x",
-    "mocha": "2.x",
     "jscs": "1.13.x",
     "jshint": "latest",
+    "loopback": "2.x",
+    "loopback-connector-mongodb": "^1.11.1",
+    "loopback-datasource-juggler": "^2.30.1",
+    "loopback-testing": "1.x",
     "mocha": "latest",
     "mocha-sinon": "latest",
     "sinon": "latest",

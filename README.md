@@ -107,3 +107,8 @@ Run with debugging output on:
 ```bash
   DEBUG='loopback-ds-changed-mixin' npm test
 ```
+
+Run the test with a mongodb datasource
+```bash
+  MONGODB_URL=mongodb://localhost/ds_changed_mixin npm test
+```

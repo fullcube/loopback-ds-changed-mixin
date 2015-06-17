@@ -13,6 +13,9 @@ function changed(Model, options) {
 
   var loopback = require('loopback');
 
+  /**
+   * Determine which properties are changed and store them in changedItems
+   */
   Model.observe('before save', function(ctx, next) {
     // Do nothing if a new instance if being created.
     if (ctx.instance && ctx.isNewInstance) {
@@ -32,48 +35,65 @@ function changed(Model, options) {
 
     if (ctx.currentInstance) {
       debug('Detected prototype.updateAttributes');
-      if (Model.propertiesChanged(ctx.currentInstance, ctx.data, properties)) {
-        ctx.hookState.changedItems = [ctx.currentInstance.getId()];
-      }
+      //if (Model.propertiesChanged(ctx.currentInstance, ctx.data, properties)) {
+      //  ctx.hookState.changedItems = [ctx.currentInstance.getId()];
+      //}
+      ctx.hookState.changedItems = Model.getChangedProperties(ctx.currentInstance, ctx.data, properties);
+
+      //console.log('ctx.hookState.changedItems 1 a: ');
+      //console.log(ctx.hookState.changedItems);
+
       next();
     } else if (ctx.instance) {
       debug('Working with existing instance %o', ctx.instance);
       // Figure out wether this item has changed properties.
       ctx.instance.itemHasChangedProperties(ctx.instance, properties)
         .then(function(changed) {
-          if (changed) {
-            ctx.hookState.changedItems = [ctx.instance.getId()];
-          }
+          ctx.hookState.changedItems = changed;
           next();
         }).catch(next);
     } else {
       debug('anything else: upsert, updateAll');
       // Figure out which items have changed properties.
       Model.itemsWithChangedProperties(ctx.where, ctx.data, properties)
-        .then(function(items) {
-          debug('items: %o', ctx.items);
-          if (items && items.length) {
-            ctx.hookState.changedItems = items;
-          }
+        .then(function(changed) {
+          ctx.hookState.changedItems = changed;
           next();
         }).catch(next);
     }
   });
 
   Model.observe('after save', function(ctx, next) {
-    if (ctx.hookState.changedItems && ctx.hookState.changedItems.length) {
+    if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems)) {
+
+      var changedItems = ctx.hookState.changedItems;
+
+      debug('after save: changedItems: %o', changedItems);
+
+      var idList = Object.keys(ctx.hookState.changedItems);
+      debug('after save: idList: %o', idList);
+
       Model.find({
         where: {
           id: {
-            inq: ctx.hookState.changedItems
+            inq: idList
           }
         },
         fields: [
           Model.getIdName()
         ]
       }).then(function(items) {
+        // Extract the ID's from the resultset
+        var itemIds = Model.extractChangedItemIds(items);
+        debug('after save: itemIds', itemIds);
+
+        // TODO remove changedItems keys that are not in itemIds
+        var callbackItems = changedItems;
+
+        debug('after save: callbackItems', callbackItems);
+
         if (typeof Model[options.callback] !== 'function') return false;
-        return Model[options.callback](Model.extractChangedItemIds(items));
+        return Model[options.callback](callbackItems);
       })
       .then(function(res) {
         next();
@@ -92,31 +112,38 @@ function changed(Model, options) {
    * @returns {Array} Returns a list of Model instance Ids whose data differ from
    *                  that in the properties argument.
    */
-  Model.itemsWithChangedProperties = function(conditions, target, properties, cb) {
-    debug('Looking for items with changed properties...');
-    debug('conditions is: %o', conditions);
-    debug('target is: %o', target);
-    debug('properties is: %o', properties);
+  Model.itemsWithChangedProperties = function(conditions, newVals, properties, cb) {
+    debug('itemsWithChangedProperties: Looking for items with changed properties...');
+    debug('itemsWithChangedProperties: conditions is: %o', conditions);
+    debug('itemsWithChangedProperties: newVals is: %o', newVals);
+    debug('itemsWithChangedProperties: properties is 1 : %o', properties);
     cb = cb || utils.createPromiseCallback();
 
     conditions = conditions || {};
-    target = typeof target.toJSON === 'function' ? target.toJSON() : target || {};
+    newVals = typeof newVals.toJSON === 'function' ? newVals.toJSON() : newVals || {};
     properties = properties || {};
 
+    var filterFields = [
+      Model.getIdName()
+    ];
+
     // Build up a list of property conditions to include in the query.
-    var fields = {or: []};
-    _.forEach(target, function(value, key) {
+    var propertyConditions = {or: []};
+    _.forEach(newVals, function(value, key) {
       if (_.includes(properties, key)) {
         var fieldFilter = {};
         fieldFilter[key] = {'neq': value};
-        fields.or.push(fieldFilter);
+        propertyConditions.or.push(fieldFilter);
+        filterFields.push(key);
       }
     });
 
-    if (!fields.or.length) fields = {};
+    if (!propertyConditions.or.length) propertyConditions = {};
+
+    debug('itemsWithChangedProperties: propertyConditions 1 : %o', propertyConditions);
 
     // If there are no property conditions, do nothing.
-    if (_.isEmpty(properties)) {
+    if (_.isEmpty(propertyConditions)) {
       process.nextTick(function() {
         cb(null, false);
       });
@@ -125,18 +152,63 @@ function changed(Model, options) {
 
     // Build the final filter.
     var filter = {
-      fields: [
-        Model.getIdName()
-      ],
+      fields: filterFields,
       where: {
-        and: [fields, conditions]
+        and: [propertyConditions, conditions]
       }
     };
-    debug('Searching using filter: %s', JSON.stringify(filter, null, 4));
+
+    debug('itemsWithChangedProperties: propertyConditions 2 : %o', propertyConditions);
+    debug('itemsWithChangedProperties: filter Fields %o', filterFields);
+    debug('itemsWithChangedProperties: conditions %o', conditions);
+    debug('itemsWithChangedProperties: final filter %o', filter);
+
     Model.find(filter)
       .then(function(results) {
-        debug('Found items that will be changed: %o', results);
-        cb(null, Model.extractChangedItemIds(results));
+
+        debug('itemsWithChangedProperties: filter results %o', results);
+
+        var changedProperties = {};
+
+        results.map(function(oldVals) {
+
+          debug('itemsWithChangedProperties: oldVals %o', oldVals);
+          debug('itemsWithChangedProperties: newVals %o', newVals);
+
+          //changedProperties[oldVals.id] = {};
+
+          var changed = {};
+
+          properties.map(function(property) {
+
+            debug('itemsWithChangedProperties: Matching property %s', property);
+
+            if (newVals[property] !== undefined) {
+
+              var newVal = newVals[property];
+
+              debug('itemsWithChangedProperties:   - newVal %s : %s : ', property, newVal);
+
+              if (!oldVals[property]) {
+                changed[property] = newVal;
+                debug('itemsWithChangedProperties:   - no oldVal %s : %s : ', property, newVal);
+              } else if (newVal !== oldVals[property]) {
+                var oldVal = oldVals[property];
+                debug('itemsWithChangedProperties:   - oldVal %s : %s : ', property, newVal);
+
+                changed[property] = newVal;
+              }
+
+            }
+          });
+
+          debug('itemsWithChangedProperties: changed %o', changed);
+          changedProperties[oldVals.id] = changed;
+
+        });
+
+        debug('itemsWithChangedProperties: changedProperties %o', changedProperties);
+        cb(null, changedProperties);
       }).catch(cb);
 
     return cb.promise;
@@ -163,9 +235,9 @@ function changed(Model, options) {
 
     Model.findById(this.getId())
       .then(function(instance) {
-        var changed = Model.propertiesChanged(instance, data, properties);
-        debug('found supposedly changed items: %o', changed);
-        cb(null, changed);
+        var changedProperties = Model.getChangedProperties(instance, data, properties);
+        debug('itemHasChangedProperties: found supposedly changed items: %o', changedProperties);
+        cb(null, changedProperties);
       }).catch(cb);
 
     return cb.promise;
@@ -193,9 +265,37 @@ function changed(Model, options) {
       }
     });
     if (changed) {
-      debug('properties were changed');
+      debug('propertiesChanged: properties were changed');
     }
     return changed;
+  };
+
+  Model.getChangedProperties = function(oldVals, newVals, properties) {
+    debug('getChangedProperties: comparing oldVals %o with newVals %o in properties %o', oldVals, newVals, properties);
+
+    var itemId = oldVals[Model.getIdName()];
+    var changedProperties = {};
+    changedProperties[itemId] = {};
+
+    _.forEach(properties, function(key) {
+      debug('getChangedProperties: - checking property %s ', key);
+
+      if (newVals[key]) {
+        var newVal = newVals[key];
+        debug('getChangedProperties:   - new value %s ', newVal);
+
+        if (!oldVals[key] || newVal !== oldVals[key]) {
+          debug('getChangedProperties:   - changed or new value %s itemId %s', newVal, itemId);
+
+          changedProperties[itemId][key] = newVal;
+        }
+      }
+    });
+    if (!_.isEmpty(changedProperties[itemId])) {
+      debug('getChangedProperties: Properties were changed %o', changedProperties);
+      return changedProperties;
+    }
+    return false;
   };
 
   Model.extractChangedItemIds = function(items) {

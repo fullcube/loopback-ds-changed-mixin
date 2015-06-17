@@ -53,6 +53,7 @@ describe('loopback datasource changed property', function() {
           callback: 'basicCallback',
           properties: {
             nickname: true,
+            nickname: true,
             age: true,
             status: true
           }
@@ -109,11 +110,13 @@ describe('loopback datasource changed property', function() {
 
       it('should run the callback after updating a watched property', function(done) {
         var self = this;
+        var expectedParams = {};
+        expectedParams[this.joe.id] = { age: 22 };
         this.joe.updateAttribute('age', 22)
         .then(function(res) {
           expect(res.age).to.equal(22);
           expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith([self.joe.id]);
+          expect(self.spy).to.have.been.calledWith(expectedParams);
           done();
         })
         .catch(done);
@@ -133,12 +136,14 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties', function(done) {
         var self = this;
+        var expectedParams = {};
+        expectedParams[this.joe.id] = { age: 22, nickname: "somename" };
         this.joe.updateAttributes({'age': 22, nickname: 'somename'})
         .then(function(res) {
           expect(res.age).to.equal(22);
           expect(res.nickname).to.equal('somename');
           expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith([self.joe.id]);
+          expect(self.spy).to.have.been.calledWith(expectedParams);
           done();
         })
         .catch(done);
@@ -159,12 +164,14 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties', function(done) {
         var self = this;
+        var expectedParams = {};
+        expectedParams[this.joe.id] = { age: 22, nickname: "somename" };
         this.joe.age = 22;
         this.joe.nickname = 'somename';
         this.joe.save()
         .then(function(res) {
           expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith([self.joe.id]);
+          expect(self.spy).to.have.been.calledWith(expectedParams);
           done();
         })
         .catch(done);
@@ -185,11 +192,13 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties', function(done) {
         var self = this;
+        var expectedParams = {};
+        expectedParams[this.joe.id] = { status: 'pending' };
         this.joe.status = 'pending';
         this.Person.upsert(this.joe)
         .then(function(res) {
           expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith([self.joe.id]);
+          expect(self.spy).to.have.been.calledWith(expectedParams);
           done();
         })
         .catch(done);
@@ -209,10 +218,13 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties on multiple models', function(done) {
         var self = this;
-        this.Person.updateAll(null, {status: 'pending'})
+        var expectedParams = {};
+        expectedParams[this.joe.id] = { status: 'pending' };
+        expectedParams[this.bilbo.id] = { status: 'pending' };
+        this.Person.updateAll(null, {status: 'pending', name: 'pending'})
         .then(function(res) {
           expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith([self.joe.id, self.bilbo.id]);
+          expect(self.spy).to.have.been.calledWith(expectedParams);
           done();
         })
         .catch(done);

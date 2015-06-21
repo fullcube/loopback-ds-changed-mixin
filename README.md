@@ -21,7 +21,7 @@ SERVER.JS
 In your `server/server.js` file add the following line before the
 `boot(app, __dirname);` line.
 
-```
+```javascript
 ...
 var app = module.exports = loopback();
 ...
@@ -49,22 +49,55 @@ your model config.
     "name": "Widget",
     "properties": {
         "name": "String",
+        "description": "String",
         "status": "String"
     },
     "mixins": {
         "Changed": {
-            "callback": "someFunction",
             "properties": {
-                "status": true
+                "name": "changeName",
+                "status": "changeStatus",
             }
         }
     }
 }
 ```
 
-In the above, if the status property is modified on one of more model instances
-the function `someFunction` will be executed with a list of the Ids of the
-instances that were changed.
+In the above, if the status property is modified on one of more model instances, the function that is defined at the 
+property will be executed with a ChangeSet as a parameter.
+
+
+```javascript
+
+// The ChangeSet object passed here has several helper methods    
+function changeName(changeSet) {
+    
+    // Return an array of all the ID's in this change set
+    changeSet.getIdList();
+    
+    // Return an object with all the ID's and their new values
+    changeSet.getIds();
+    
+    // Return the value for a given ID
+    changeSet.getId(id);
+    
+    // Return an array of all the unique values in this change set
+    changeSet.getValueList();
+    
+    // Return an object with all the Values and an array of the ID's changed to this value
+    changeSet.getValues();
+    
+    // Return an array of all the ID's changed to a given value
+    changeSet.getValue(value);
+    
+    // The raw data is available as well
+    changeSet.ids;
+    changeSet.values;
+            
+}
+
+```
+
 
 OPTIONS
 =============
@@ -72,21 +105,22 @@ OPTIONS
 The specific fields that are to be marked as changed can be set by passing an
 object to the mixin options.
 
-In this example we mark the `status` fields for change notifications.
+In this example we mark the `status` and `productId` properties for change notifications. The value of each property 
+defined here is the name of the callback method that is invoked when changes on that property is detected.
 
 ```json
 {
     "name": "Widget",
     "properties": {
         "name": "String",
-        "status": "String",
-        "role": "String"
+        "description": "String",
+        "status": "String"
     },
     "mixins": {
         "Changed": {
-            "callback": "someFunction",
             "properties": {
-                "status": true
+                "name": "changeName",
+                "status": "changeStatus",
             }
         }
     }

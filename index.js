@@ -5,13 +5,113 @@ var _ = require('lodash');
 function changed(Model, options) {
   'use strict';
 
-  if (typeof Model[options.callback] !== 'function') {
-    console.warn('Callback %s is not a model function', options.callback);
-  }
+  // Trigger a warning when one of the defined callbacks is not found
+  _.mapKeys(options.properties, function(callback, property) {
+    if (typeof Model[callback] !== 'function') {
+      console.warn('Callback %s for %s is not a model function', callback, property);
+    }
+  });
 
   debug('Changed mixin for Model %s', Model.modelName);
 
   var loopback = require('loopback');
+
+  // This is the structure that we want to return
+  function ChangeSet(changeset) {
+    this.ids = changeset.ids;
+    this.values = changeset.values;
+  }
+  ChangeSet.prototype.getIdList = function() {
+    return Object.keys(this.ids);
+  };
+  ChangeSet.prototype.getIds = function() {
+    return this.ids;
+  };
+  ChangeSet.prototype.getId = function(id) {
+    return this.ids[id];
+  };
+  ChangeSet.prototype.getValueList = function() {
+    return Object.keys(this.values);
+  };
+  ChangeSet.prototype.getValues = function() {
+    return this.values;
+  };
+  ChangeSet.prototype.getValue = function(value) {
+    return this.values[value];
+  };
+
+  /**
+   * Helper method that converts the set of items to a set of property
+   * In the future this structure should be used directly by the code
+   * that detects the changes.
+   *
+   * Input:
+   *
+   * {
+   *    '5586c51948fb091e068f80f4': {
+   *        status: 'pending'
+   *    },
+   *    '5586c51948fb091e068f80f5': {
+   *        status: 'pending'
+   *    }
+   * }
+   *
+   * Output:
+   *
+   * {
+   *    status: {
+   *        ids: {
+   *            '5586c58848fb091e068f8115': 'pending',
+   *            '5586c58848fb091e068f8116': 'pending'
+   *        },
+   *        values: {
+   *            pending: [
+   *                '5586c58848fb091e068f8115',
+   *                '5586c58848fb091e068f8116'
+   *            ]
+   *        }
+   *    }
+   * }
+   *
+   * @returns {{}}
+   */
+  function convertItemsToProperties(items) {
+
+    // The object that contains the converted items
+    var result = {};
+
+    // Loop through all the inserted items
+    _.mapKeys(items, function(changes, itemId) {
+
+      // Loop through changes for this item
+      _.mapKeys(changes, function(value, property) {
+
+        // Add basic structure to hold ids and values
+        if (_.isUndefined(result[property])) {
+          result[property] = { ids: {}, values: {} };
+        }
+
+        // Create an array to hold ids for each value
+        if (_.isUndefined(result[property].values[value])) {
+          result[property].values[value] = [];
+        }
+
+        // Create an object { itemId: value }
+        result[property].ids[itemId] = value;
+
+        // Enter itemId in the array for this value
+        result[property].values[value].push(itemId);
+      });
+
+    });
+
+    var changedProperties = {};
+    _.mapKeys(result, function(changeset, property) {
+      changedProperties[property] = new ChangeSet(changeset);
+    });
+
+    return changedProperties;
+  }
 
   /**
    * Determine which properties are changed and store them in changedItems
@@ -35,13 +135,8 @@ function changed(Model, options) {
 
     if (ctx.currentInstance) {
       debug('Detected prototype.updateAttributes');
-      //if (Model.propertiesChanged(ctx.currentInstance, ctx.data, properties)) {
-      //  ctx.hookState.changedItems = [ctx.currentInstance.getId()];
-      //}
-      ctx.hookState.changedItems = Model.getChangedProperties(ctx.currentInstance, ctx.data, properties);
 
-      //console.log('ctx.hookState.changedItems 1 a: ');
-      //console.log(ctx.hookState.changedItems);
+      ctx.hookState.changedItems = Model.getChangedProperties(ctx.currentInstance, ctx.data, properties);
 
       next();
     } else if (ctx.instance) {
@@ -64,6 +159,25 @@ function changed(Model, options) {
   });
 
   Model.observe('after save', function(ctx, next) {
+
+    // Convert the changeItems to Properties
+    if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems)) {
+
+      var properties = convertItemsToProperties(ctx.hookState.changedItems);
+
+      debug('after save changedProperties %o', properties);
+
+      _.mapKeys(properties, function(changeset, property) {
+        var callback = options.properties[property];
+        if (typeof Model[callback] !== 'function') {
+          console.warn('Function %s not found on Model', callback);
+          return false;
+        }
+        debug('after save: invoke %s with %o', callback, changeset);
+        Model[callback](changeset);
+      });
+    }
+
     if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems)) {
 
       var changedItems = ctx.hookState.changedItems;

@@ -1,6 +1,6 @@
 {
   "name": "loopback-ds-changed-mixin",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "A mixin to enable loopback Model properties to be marked as changed.",
   "main": "index.js",
   "keywords": [

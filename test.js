@@ -50,7 +50,6 @@ describe('loopback datasource changed property', function() {
     }, {
       mixins: {
         Changed: {
-          callback: 'basicCallback',
           properties: {
             nickname: 'changeNickname',
             age: 'changeAge',
@@ -59,16 +58,6 @@ describe('loopback datasource changed property', function() {
         }
       }
     });
-
-    // Define a function that should be called when a change is detected.
-    Person.basicCallback = function(args, cb) {
-      cb = cb || utils.createPromiseCallback();
-      debug('this.basicCallback() called with %o', args);
-      process.nextTick(function() {
-        cb(null);
-      });
-      return cb.promise;
-    };
 
     // Define a function that should be called when a change is detected.
     Person.changeNickname = function(args, cb) {
@@ -101,7 +90,6 @@ describe('loopback datasource changed property', function() {
     };
 
     // Set up some spies so we can check whether our callbacks have been called.
-    this.spy = sinon.spy(Person, 'basicCallback');
     this.spyAge = sinon.spy(Person, 'changeAge');
     this.spyStatus = sinon.spy(Person, 'changeStatus');
     this.spyNickname = sinon.spy(Person, 'changeNickname');
@@ -124,8 +112,7 @@ describe('loopback datasource changed property', function() {
     describe('Model.create', function() {
       it('should not run callback when creating new instances.', function(done) {
         var self = this;
-        expect(self.spy).not.to.have.been.called;
-        expect(self.spyAge).not.to.have.been.called;
+      expect(self.spyAge).not.to.have.been.called;
         expect(self.spyStatus).not.to.have.been.called;
         expect(self.spyNickname).not.to.have.been.called;
         done();
@@ -137,7 +124,6 @@ describe('loopback datasource changed property', function() {
         var self = this;
         this.joe.updateAttribute('name', 'Newname')
         .then(function(res) {
-          expect(self.spy).not.to.have.been.called;
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -148,13 +134,9 @@ describe('loopback datasource changed property', function() {
 
       it('should run the callback after updating a watched property', function(done) {
         var self = this;
-        var expectedParams = {};
-        expectedParams[this.joe.id] = { age: 22 };
         this.joe.updateAttribute('age', 22)
         .then(function(res) {
           expect(res.age).to.equal(22);
-          expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith(expectedParams);
           expect(self.spyAge).to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -169,7 +151,6 @@ describe('loopback datasource changed property', function() {
         var self = this;
         this.joe.updateAttributes({'name': 'Newname'})
         .then(function(res) {
-          expect(self.spy).not.to.have.been.called;
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -180,14 +161,10 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties', function(done) {
         var self = this;
-        var expectedParams = {};
-        expectedParams[this.joe.id] = { age: 22, nickname: "somename" };
         this.joe.updateAttributes({'age': 22, nickname: 'somename'})
         .then(function(res) {
           expect(res.age).to.equal(22);
           expect(res.nickname).to.equal('somename');
-          expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith(expectedParams);
           expect(self.spyAge).to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).to.have.been.called;
@@ -203,7 +180,6 @@ describe('loopback datasource changed property', function() {
         this.joe.name = 'Newname';
         this.joe.save()
         .then(function(res) {
-          expect(self.spy).not.to.have.been.called;
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -214,14 +190,10 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties', function(done) {
         var self = this;
-        var expectedParams = {};
-        expectedParams[this.joe.id] = { age: 22, nickname: "somename" };
         this.joe.age = 22;
         this.joe.nickname = 'somename';
         this.joe.save()
         .then(function(res) {
-          expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith(expectedParams);
           expect(self.spyAge).to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).to.have.been.called;
@@ -237,7 +209,6 @@ describe('loopback datasource changed property', function() {
         this.joe.name = 'Newname';
         this.Person.upsert(this.joe)
         .then(function(res) {
-          expect(self.spy).not.to.have.been.called;
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -248,13 +219,9 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties', function(done) {
         var self = this;
-        var expectedParams = {};
-        expectedParams[this.joe.id] = { status: 'pending' };
         this.joe.status = 'pending';
         this.Person.upsert(this.joe)
         .then(function(res) {
-          expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith(expectedParams);
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -269,7 +236,6 @@ describe('loopback datasource changed property', function() {
         var self = this;
         this.Person.updateAll(null, {name: 'Newname'})
         .then(function(res) {
-          expect(self.spy).not.to.have.been.called;
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;
@@ -280,13 +246,8 @@ describe('loopback datasource changed property', function() {
 
       it('should execute the callback after updating watched properties on multiple models', function(done) {
         var self = this;
-        var expectedParams = {};
-        expectedParams[this.joe.id] = { status: 'pending' };
-        expectedParams[this.bilbo.id] = { status: 'pending' };
         this.Person.updateAll(null, {status: 'pending', name: 'pending'})
         .then(function(res) {
-          expect(self.spy).to.have.been.called;
-          expect(self.spy).to.have.been.calledWith(expectedParams);
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).to.have.been.called;
           expect(self.spyNickname).not.to.have.been.called;

@@ -176,45 +176,12 @@ function changed(Model, options) {
         debug('after save: invoke %s with %o', callback, changeset);
         Model[callback](changeset);
       });
-    }
 
-    if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems)) {
-
-      var changedItems = ctx.hookState.changedItems;
-
-      debug('after save: changedItems: %o', changedItems);
-
-      var idList = Object.keys(ctx.hookState.changedItems);
-      debug('after save: idList: %o', idList);
-
-      Model.find({
-        where: {
-          id: {
-            inq: idList
-          }
-        },
-        fields: [
-          Model.getIdName()
-        ]
-      }).then(function(items) {
-        // Extract the ID's from the resultset
-        var itemIds = Model.extractChangedItemIds(items);
-        debug('after save: itemIds', itemIds);
-
-        // TODO remove changedItems keys that are not in itemIds
-        var callbackItems = changedItems;
-
-        debug('after save: callbackItems', callbackItems);
-
-        if (typeof Model[options.callback] !== 'function') return false;
-        return Model[options.callback](callbackItems);
-      })
-      .then(function(res) {
-        next();
-      }).catch(next);
+      next();
     } else {
       next();
     }
+
   });
 
   /**

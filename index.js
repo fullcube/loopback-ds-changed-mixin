@@ -189,7 +189,7 @@ function changed(Model, options) {
           return false;
         }
         debug('after save: invoke %s with %o', callback, changeset);
-        Model[callback](changeset).then(function(){
+        Model[callback](changeset).then(function() {
           cb();
         }).catch(cb);
       }, function(err) {

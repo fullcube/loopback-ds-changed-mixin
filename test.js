@@ -188,18 +188,31 @@ describe('loopback datasource changed property', function() {
         .catch(done);
       });
 
-      it('should execute the callback after updating watched properties', function(done) {
+      it('should execute 1 callback after updating 1 watched property', function(done) {
+        var self = this;
+        this.joe.age = 22;
+        this.joe.save()
+          .then(function(res) {
+            expect(self.spyAge).to.have.been.called;
+            expect(self.spyStatus).not.to.have.been.called;
+            expect(self.spyNickname).not.to.have.been.called;
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should execute 2 callbacks after updating 2 watched properties', function(done) {
         var self = this;
         this.joe.age = 22;
         this.joe.nickname = 'somename';
         this.joe.save()
-        .then(function(res) {
-          expect(self.spyAge).to.have.been.called;
-          expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).to.have.been.called;
-          done();
-        })
-        .catch(done);
+          .then(function(res) {
+            expect(self.spyAge).to.have.been.called;
+            expect(self.spyStatus).not.to.have.been.called;
+            expect(self.spyNickname).to.have.been.called;
+            done();
+          })
+          .catch(done);
       });
     });
 
@@ -217,17 +230,31 @@ describe('loopback datasource changed property', function() {
         .catch(done);
       });
 
-      it('should execute the callback after updating watched properties', function(done) {
+      it('should execute 1 callback after updating 1 watched property', function(done) {
         var self = this;
         this.joe.status = 'pending';
         this.Person.upsert(this.joe)
-        .then(function(res) {
-          expect(self.spyAge).not.to.have.been.called;
-          expect(self.spyStatus).to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
-          done();
-        })
-        .catch(done);
+          .then(function(res) {
+            expect(self.spyAge).not.to.have.been.called;
+            expect(self.spyStatus).to.have.been.called;
+            expect(self.spyNickname).not.to.have.been.called;
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should execute 2 callbacks after updating 2 watched properties', function(done) {
+        var self = this;
+        this.joe.status = 'pending';
+        this.joe.age = '23';
+        this.Person.upsert(this.joe)
+          .then(function(res) {
+            expect(self.spyAge).to.have.been.called;
+            expect(self.spyStatus).to.have.been.called;
+            expect(self.spyNickname).not.to.have.been.called;
+            done();
+          })
+          .catch(done);
       });
     });
 
@@ -244,16 +271,28 @@ describe('loopback datasource changed property', function() {
         .catch(done);
       });
 
-      it('should execute the callback after updating watched properties on multiple models', function(done) {
+      it('should execute 1 callback after updating 1 watched propertie on multiple models', function(done) {
         var self = this;
         this.Person.updateAll(null, {status: 'pending', name: 'pending'})
-        .then(function(res) {
-          expect(self.spyAge).not.to.have.been.called;
-          expect(self.spyStatus).to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
-          done();
-        })
-        .catch(done);
+          .then(function(res) {
+            expect(self.spyAge).not.to.have.been.called;
+            expect(self.spyStatus).to.have.been.called;
+            expect(self.spyNickname).not.to.have.been.called;
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should execute 2 callbacks after updating 2 watched properties on multiple models', function(done) {
+        var self = this;
+        this.Person.updateAll(null, {status: 'pending', age: '23'})
+          .then(function(res) {
+            expect(self.spyAge).to.have.been.called;
+            expect(self.spyStatus).to.have.been.called;
+            expect(self.spyNickname).not.to.have.been.called;
+            done();
+          })
+          .catch(done);
       });
     });
 

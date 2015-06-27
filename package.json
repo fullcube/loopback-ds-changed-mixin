@@ -14,6 +14,7 @@
     "url": "https://github.com/fullcube/loopback-ds-changed-mixin.git"
   },
   "dependencies": {
+    "async": "^1.2.1",
     "debug": "2.x",
     "lodash": "latest"
   },

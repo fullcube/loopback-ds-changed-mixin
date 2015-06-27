@@ -1,6 +1,7 @@
 var debug = require('debug')('loopback-ds-changed-mixin');
 var utils = require('loopback-datasource-juggler/lib/utils');
 var _ = require('lodash');
+var async = require('async');
 
 function changed(Model, options) {
   'use strict';
@@ -181,17 +182,21 @@ function changed(Model, options) {
 
       debug('after save changedProperties %o', properties);
 
-      _.mapKeys(properties, function(changeset, property) {
+      async.forEachOf(properties, function(changeset, property, cb) {
         var callback = options.properties[property];
         if (typeof Model[callback] !== 'function') {
           console.warn('Function %s not found on Model', callback);
           return false;
         }
         debug('after save: invoke %s with %o', callback, changeset);
-        return Model[callback](changeset);
+        Model[callback](changeset).then(function(){
+          cb();
+        }).catch(cb);
+      }, function(err) {
+        if (err) console.error(err);
+        next();
       });
 
-      next();
     } else {
       next();
     }

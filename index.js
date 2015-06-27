@@ -19,7 +19,7 @@ function changed(Model, options) {
       removeProperty = true;
     }
 
-    if(removeProperty) {
+    if (removeProperty) {
       debug('Remove Changed %s for %s ', property, Model.modelName);
       delete options.properties[property];
     }
@@ -188,7 +188,7 @@ function changed(Model, options) {
           return false;
         }
         debug('after save: invoke %s with %o', callback, changeset);
-        Model[callback](changeset);
+        return Model[callback](changeset);
       });
 
       next();

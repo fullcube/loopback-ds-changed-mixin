@@ -1,10 +1,11 @@
+'use strict';
+
 var debug = require('debug')('loopback-ds-changed-mixin');
 var utils = require('loopback-datasource-juggler/lib/utils');
 var _ = require('lodash');
 var async = require('async');
 
 function changed(Model, options) {
-  'use strict';
 
   // Trigger a warning and remove the property from the watchlist when one of
   // the property is not found on the model or the defined callback is not found
@@ -28,8 +29,6 @@ function changed(Model, options) {
 
   debug('Changed mixin for Model %s with properties', Model.modelName,
     options.properties);
-
-  var loopback = require('loopback');
 
   // This is the structure that we want to return
   function ChangeSet(changeset) {
@@ -193,7 +192,9 @@ function changed(Model, options) {
           cb();
         }).catch(cb);
       }, function(err) {
-        if (err) console.error(err);
+        if (err) {
+          console.error(err);
+        }
         next();
       });
 
@@ -238,7 +239,9 @@ function changed(Model, options) {
       }
     });
 
-    if (!propertyConditions.or.length) propertyConditions = {};
+    if (!propertyConditions.or.length) {
+      propertyConditions = {};
+    }
 
     debug('itemsWithChangedProperties: propertyConditions 1 : %o', propertyConditions);
 

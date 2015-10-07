@@ -51,6 +51,7 @@ describe('loopback datasource changed property', function() {
       mixins: {
         Changed: {
           properties: {
+            name: 'changeNickname',
             nickname: 'changeNickname',
             age: 'changeAge',
             status: 'changeStatus'
@@ -105,9 +106,12 @@ describe('loopback datasource changed property', function() {
   lt.beforeEach.withApp(app);
 
   describe('when called internally', function() {
-    lt.beforeEach.givenModel('person', {name:'Joe Blogs', nickname: 'joe', age: 21, status: 'active'}, 'joe');
-    lt.beforeEach.givenModel('person', {name:'Bilbo Baggins', nickname: 'bilbo', age: 99, status: 'active'}, 'bilbo');
-    lt.beforeEach.givenModel('person', {name:'Tina Turner', nickname: 'tina', age: 80, status: 'pending'}, 'tina');
+    lt.beforeEach.givenModel('person',
+      {title: 'Mr', name:'Joe Blogs', nickname: 'joe', age: 21, status: 'active'}, 'joe');
+    lt.beforeEach.givenModel('person',
+      {title: 'Mr', name:'Bilbo Baggins', nickname: 'bilbo', age: 99, status: 'active'}, 'bilbo');
+    lt.beforeEach.givenModel('person',
+      {title: 'Miss', name:'Tina Turner', nickname: 'tina', age: 80, status: 'pending'}, 'tina');
 
     describe('Model.create', function() {
       it('should not run callback when creating new instances.', function(done) {
@@ -122,7 +126,7 @@ describe('loopback datasource changed property', function() {
     describe('Model.updateAttribute', function() {
       it('should not run callback if no watched properties are updated', function(done) {
         var self = this;
-        this.joe.updateAttribute('name', 'Newname')
+        this.joe.updateAttribute('title', 'Newtitle')
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
@@ -149,7 +153,7 @@ describe('loopback datasource changed property', function() {
     describe('Model.updateAttributes', function() {
       it('should not run callback if no watched properties are updated', function(done) {
         var self = this;
-        this.joe.updateAttributes({'name': 'Newname'})
+        this.joe.updateAttributes({'title': 'Newtitle'})
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
@@ -177,7 +181,7 @@ describe('loopback datasource changed property', function() {
     describe('Model.save', function() {
       it('should not run callback if no watched properties are updated', function(done) {
         var self = this;
-        this.joe.name = 'Newname';
+        this.joe.title = 'Newtitle';
         this.joe.save()
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
@@ -219,7 +223,7 @@ describe('loopback datasource changed property', function() {
     describe('Model.upsert', function() {
       it('should not run callback if no watched properties are updated', function(done) {
         var self = this;
-        this.joe.name = 'Newname';
+        this.joe.title = 'Newtitle';
         this.Person.upsert(this.joe)
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
@@ -261,7 +265,7 @@ describe('loopback datasource changed property', function() {
     describe('Model.updateAll', function() {
       it('should not run callback if no watched properties are updated', function(done) {
         var self = this;
-        this.Person.updateAll(null, {name: 'Newname'})
+        this.Person.updateAll(null, {title: 'Newtitle'})
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
@@ -273,7 +277,7 @@ describe('loopback datasource changed property', function() {
 
       it('should execute 1 callback after updating 1 watched propertie on multiple models', function(done) {
         var self = this;
-        this.Person.updateAll(null, {status: 'pending', name: 'pending'})
+        this.Person.updateAll(null, {status: 'pending', title: 'Newtitle'})
           .then(function(res) {
             expect(self.spyAge).not.to.have.been.called;
             expect(self.spyStatus).to.have.been.called;

@@ -294,7 +294,7 @@ function changed(Model, options) {
                 debug('itemsWithChangedProperties:   - no oldVal %s : %s : ', property, newVal);
               } else if (newVal !== oldVals[property]) {
                 var oldVal = oldVals[property];
-                debug('itemsWithChangedProperties:   - oldVal %s : %s : ', property, newVal);
+                debug('itemsWithChangedProperties:   - oldVal %s : %s : ', property, oldVal);
 
                 changed[property] = newVal;
               }

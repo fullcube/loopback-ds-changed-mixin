@@ -5,6 +5,47 @@ var utils = require('loopback-datasource-juggler/lib/utils');
 var _ = require('lodash');
 var async = require('async');
 
+/**
+ * Class: ChangeSet
+ */
+function ChangeSet(changeset) {
+  this.ids = changeset.ids;
+  this.values = changeset.values;
+}
+
+// Return an array of all the ID's in this change set
+ChangeSet.prototype.getIdList = function() {
+  return Object.keys(this.ids);
+};
+
+// Return an object with all the ID's and their new values
+ChangeSet.prototype.getIds = function() {
+  return this.ids;
+};
+
+// Return the value for a given ID
+ChangeSet.prototype.getId = function(id) {
+  return this.ids[id];
+};
+
+// Return an array of all the unique values in this change set
+ChangeSet.prototype.getValueList = function() {
+  return Object.keys(this.values);
+};
+
+// Return an object with all the Values and an array of the ID's changed to this value
+ChangeSet.prototype.getValues = function() {
+  return this.values;
+};
+
+// Return an array of all the ID's changed to a given value
+ChangeSet.prototype.getValue = function(value) {
+  return this.values[value];
+};
+
+/**
+ * Mixin: changed
+ */
 function changed(Model, options) {
 
   // Trigger a warning and remove the property from the watchlist when one of
@@ -29,30 +70,6 @@ function changed(Model, options) {
 
   debug('Changed mixin for Model %s with properties', Model.modelName,
     options.properties);
-
-  // This is the structure that we want to return
-  function ChangeSet(changeset) {
-    this.ids = changeset.ids;
-    this.values = changeset.values;
-  }
-  ChangeSet.prototype.getIdList = function() {
-    return Object.keys(this.ids);
-  };
-  ChangeSet.prototype.getIds = function() {
-    return this.ids;
-  };
-  ChangeSet.prototype.getId = function(id) {
-    return this.ids[id];
-  };
-  ChangeSet.prototype.getValueList = function() {
-    return Object.keys(this.values);
-  };
-  ChangeSet.prototype.getValues = function() {
-    return this.values;
-  };
-  ChangeSet.prototype.getValue = function(value) {
-    return this.values[value];
-  };
 
   /**
    * Helper method that converts the set of items to a set of property
@@ -173,24 +190,41 @@ function changed(Model, options) {
   });
 
   Model.observe('after save', function(ctx, next) {
-
     // Convert the changeItems to Properties
     if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems)) {
 
-      var properties = convertItemsToProperties(ctx.hookState.changedItems);
+      // Build up a list of callbacks with the changesets that they shoudl be called with.
+      var map = {};
+      _.forEach(options.properties, function(callback, property) {
+        var item = map[callback] || [];
+        map[callback] = item.concat(property);
+      });
+      debug('after save callback map: %o', map);
 
-      debug('after save changedProperties %o', properties);
+      debug('after save ctx.hookState.changedItems: %o', ctx.hookState.changedItems);
+      var changesets = convertItemsToProperties(ctx.hookState.changedItems);
+      debug('after save changedProperties: %o', changesets);
 
-      async.forEachOf(properties, function(changeset, property, cb) {
-        var callback = options.properties[property];
+      async.forEachOf(map, function(properties, callback, cb) {
         if (typeof Model[callback] !== 'function') {
           console.warn('Function %s not found on Model', callback);
-          return false;
+          return cb();
         }
-        debug('after save: invoke %s with %o', callback, changeset);
-        Model[callback](changeset).then(function() {
-          cb();
-        }).catch(cb);
+
+        var changedProperties = Object.keys(changesets);
+        var runCallback = _.intersection(properties, changedProperties).length > 0;
+        if (!runCallback) {
+          debug('not running callback %s as none of %o were changed', callback, properties);
+          return cb();
+        }
+
+        // Invoke the callback with changesets.
+        debug('after save: invoke %s with %o', callback, changesets);
+        Model[callback](changesets)
+          .then(function() {
+            cb();
+          })
+          .catch(cb);
       }, function(err) {
         if (err) {
           console.error(err);
@@ -201,7 +235,6 @@ function changed(Model, options) {
     } else {
       next();
     }
-
   });
 
   /**
@@ -383,7 +416,7 @@ function changed(Model, options) {
 
       if (newVals[key]) {
         var newVal = newVals[key];
-        debug('getChangedProperties:   - new value %s ', newVal);
+        debug('getChangedProperties:   - new value: %s ', newVal);
 
         if (!oldVals[key] || !_.isEqual(oldVals[key], newVal)) {
           debug('getChangedProperties:   - changed or new value: %s itemId: %s', newVal, itemId);
@@ -393,7 +426,7 @@ function changed(Model, options) {
       }
     });
     if (!_.isEmpty(changedProperties[itemId])) {
-      debug('getChangedProperties: Properties were changed %o', changedProperties);
+      debug('getChangedProperties: Properties were changed: %o', changedProperties);
       return changedProperties;
     }
     return false;

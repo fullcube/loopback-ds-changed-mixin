@@ -5,6 +5,35 @@ var utils = require('loopback-datasource-juggler/lib/utils');
 var _ = require('lodash');
 var async = require('async');
 
+// /**
+//  * Class: ChangeSet
+//  */
+// function ChangeSet(instances) {
+//   this.instances = instances;
+//   // this.instances = {
+//   //   1: {
+//   //     before: {
+//   //       status: 'active'
+//   //     },
+//   //     after: {
+//   //       age: 25,
+//   //       status: 'active'
+//   //     },
+//   //     diff: {
+//   //       age: {
+//   //         before: undefined,
+//   //         after: 24,
+//   //       }
+//   //     }
+//   //   },
+//   //   2: {}
+//   // };
+// }
+//
+// ChangeSet.prototype.getInstances = function() {
+//   return this.instances;
+// };
+
 /**
  * Class: ChangeSet
  */
@@ -166,16 +195,24 @@ function changed(Model, options) {
 
     if (ctx.currentInstance) {
       debug('Detected prototype.updateAttributes');
-
-      ctx.hookState.changedItems = Model.getChangedProperties(ctx.currentInstance, ctx.data, properties);
-
+      ctx.hookState.changedItems = {
+        instances: [
+          ctx.currentInstance
+        ],
+        properties: Model.getChangedProperties(ctx.currentInstance, ctx.data, properties)
+      };
       next();
     } else if (ctx.instance) {
       debug('Working with existing instance %o', ctx.instance);
       // Figure out wether this item has changed properties.
       ctx.instance.itemHasChangedProperties(ctx.instance, properties)
         .then(function(changed) {
-          ctx.hookState.changedItems = changed;
+          ctx.hookState.changedItems = {
+            instances: [
+              ctx.instance
+            ],
+            properties: changed
+          };
           next();
         }).catch(next);
     } else {
@@ -191,9 +228,9 @@ function changed(Model, options) {
 
   Model.observe('after save', function(ctx, next) {
     // Convert the changeItems to Properties
-    if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems)) {
+    if (ctx.hookState.changedItems && !_.isEmpty(ctx.hookState.changedItems.properties)) {
 
-      // Build up a list of callbacks with the changesets that they shoudl be called with.
+      // Build up a list of callbacks with the changesets that they should be called with.
       var map = {};
       _.forEach(options.properties, function(callback, property) {
         var item = map[callback] || [];
@@ -202,7 +239,7 @@ function changed(Model, options) {
       debug('after save callback map: %o', map);
 
       debug('after save ctx.hookState.changedItems: %o', ctx.hookState.changedItems);
-      var changesets = convertItemsToProperties(ctx.hookState.changedItems);
+      var changesets = convertItemsToProperties(ctx.hookState.changedItems.properties);
       debug('after save changedProperties: %o', changesets);
 
       async.forEachOf(map, function(properties, callback, cb) {
@@ -218,8 +255,13 @@ function changed(Model, options) {
           return cb();
         }
 
+        var data = {
+          instances: ctx.hookState.changedItems.instances,
+          changesets: changesets
+        };
+
         // Invoke the callback with changesets.
-        debug('after save: invoke %s with %o', callback, changesets);
+        debug('after save: invoke %s with %o', callback, data);
         Model[callback](changesets)
           .then(function() {
             cb();
@@ -304,17 +346,17 @@ function changed(Model, options) {
 
         debug('itemsWithChangedProperties: filter results %o', results);
 
-        var changedProperties = {};
+        var changedData = {
+          instances: results,
+          properties: {}
+        };
 
         results.map(function(oldVals) {
 
           debug('itemsWithChangedProperties: oldVals %o', oldVals);
           debug('itemsWithChangedProperties: newVals %o', newVals);
 
-          //changedProperties[oldVals.id] = {};
-
           var changed = {};
-
           properties.map(function(property) {
 
             debug('itemsWithChangedProperties: Matching property %s', property);
@@ -338,11 +380,11 @@ function changed(Model, options) {
           });
 
           debug('itemsWithChangedProperties: changed %o', changed);
-          changedProperties[oldVals.id] = changed;
+          changedData.properties[oldVals.id] = changed;
         });
 
-        debug('itemsWithChangedProperties: changedProperties %o', changedProperties);
-        cb(null, changedProperties);
+        debug('itemsWithChangedProperties: changedData %o', changedData);
+        cb(null, changedData);
       }).catch(cb);
 
     return cb.promise;

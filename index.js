@@ -295,10 +295,9 @@ function changed(Model, options) {
               if (!oldVals[property]) {
                 changed[property] = newVal;
                 debug('itemsWithChangedProperties:   - no oldVal %s : %s : ', property, newVal);
-              } else if (newVal !== oldVals[property]) {
+              } else if (!_.isEqual(oldVals[property], newVal)) {
                 var oldVal = oldVals[property];
                 debug('itemsWithChangedProperties:   - oldVal %s : %s : ', property, oldVal);
-
                 changed[property] = newVal;
               }
 
@@ -307,7 +306,6 @@ function changed(Model, options) {
 
           debug('itemsWithChangedProperties: changed %o', changed);
           changedProperties[oldVals.id] = changed;
-
         });
 
         debug('itemsWithChangedProperties: changedProperties %o', changedProperties);
@@ -387,8 +385,8 @@ function changed(Model, options) {
         var newVal = newVals[key];
         debug('getChangedProperties:   - new value %s ', newVal);
 
-        if (!oldVals[key] || newVal !== oldVals[key]) {
-          debug('getChangedProperties:   - changed or new value %s itemId %s', newVal, itemId);
+        if (!oldVals[key] || !_.isEqual(oldVals[key], newVal)) {
+          debug('getChangedProperties:   - changed or new value: %s itemId: %s', newVal, itemId);
 
           changedProperties[itemId][key] = newVal;
         }

@@ -4,6 +4,7 @@ var debug = require('debug')('loopback-ds-changed-mixin');
 var utils = require('loopback-datasource-juggler/lib/utils');
 var _ = require('lodash');
 var async = require('async');
+var util = require('util');
 
 function changed(Model, options) {
 
@@ -136,6 +137,12 @@ function changed(Model, options) {
       return next();
     }
 
+    // Do nothing if the caller has chosen to skip the changed mixin.
+    if (ctx.options && ctx.options.skipChanged && typeof ctx.options.skipChanged === 'boolean') {
+      debug('skipping changed mixin');
+      return next();
+    }
+
     if (!ctx.hookState.changedItems) {
       ctx.hookState.changedItems = [];
     }
@@ -183,9 +190,12 @@ function changed(Model, options) {
 
       async.forEachOf(properties, function(changeset, property, cb) {
         var callback = options.properties[property];
+        if (ctx.options && ctx.options.skipChanged && Model.shouldSkipProperty(property, ctx.options.skipChanged)) {
+          debug('skipping changed callback for', property);
+          return cb();
+        }
         if (typeof Model[callback] !== 'function') {
-          console.warn('Function %s not found on Model', callback);
-          return false;
+          return cb(new Error(util.format('Function %s not found on Model', callback)));
         }
         debug('after save: invoke %s with %o', callback, changeset);
         Model[callback](changeset).then(function() {
@@ -203,6 +213,18 @@ function changed(Model, options) {
     }
 
   });
+
+  Model.shouldSkipProperty = function(property, skipChanged) {
+    if (typeof skipChanged === 'boolean') {
+      return skipChanged;
+    } else if (typeof skipChanged === 'string') {
+      return property === skipChanged;
+    } else if (Array.isArray(skipChanged)) {
+      return _.includes(skipChanged, property);
+    } else if (typeof skipChanged === 'object') {
+      return _.find(skipChanged, property, true);
+    }
+  };
 
   /**
    * Searches for items with properties that differ from a specific set.

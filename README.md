@@ -6,7 +6,7 @@ It provides a mixin that makes it possible to trigger a function if selected
 model properties change.
 
 The property value is an object that details model properties to be
-watched as well as the callback function to be trigged. 
+watched as well as the callback function to be trigged.
 
 INSTALL
 =============
@@ -63,7 +63,7 @@ your model config.
 }
 ```
 
-In the above, if the status property is modified on one of more model instances, the function that is defined at the 
+In the above, if the status property is modified on one of more model instances, the function that is defined at the
 property will be executed with a ChangeSet as a parameter.
 
 
@@ -71,29 +71,29 @@ property will be executed with a ChangeSet as a parameter.
 
 // The ChangeSet object passed here has several helper methods    
 function changeName(changeSet) {
-    
+
     // Return an array of all the ID's in this change set
     changeSet.getIdList();
-    
+
     // Return an object with all the ID's and their new values
     changeSet.getIds();
-    
+
     // Return the value for a given ID
     changeSet.getId(id);
-    
+
     // Return an array of all the unique values in this change set
     changeSet.getValueList();
-    
+
     // Return an object with all the Values and an array of the ID's changed to this value
     changeSet.getValues();
-    
+
     // Return an array of all the ID's changed to a given value
     changeSet.getValue(value);
-    
+
     // The raw data is available as well
     changeSet.ids;
     changeSet.values;
-            
+
 }
 
 ```
@@ -105,7 +105,7 @@ OPTIONS
 The specific fields that are to be marked as changed can be set by passing an
 object to the mixin options.
 
-In this example we mark the `status` and `productId` properties for change notifications. The value of each property 
+In this example we mark the `status` and `productId` properties for change notifications. The value of each property
 defined here is the name of the callback method that is invoked when changes on that property is detected.
 
 ```json
@@ -126,6 +126,18 @@ defined here is the name of the callback method that is invoked when changes on 
     }
 }
 ```
+
+You can selectively skip the changed mixin behavior in calls to loopback update methods by setting the
+`skipChange` option. This can be a boolean to skip the behavior on all properties, a string to skip the behavior
+for a single property, or an array or object to skip the behavior for multiple properties.
+
+```javascript
+instance.save({skipChanged: true}); // skip behavior
+instance.save({skipChanged: 'name'}); // skip behavior for the properties.
+instance.save({skipChanged: ['name', 'status']}); // skip behavior for name and status properties.
+instance.save({skipChanged: {name: true, status: true}}); // skip behavior for name and status properties.
+```
+
 
 TESTING
 =============

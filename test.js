@@ -51,8 +51,8 @@ describe('loopback datasource changed property', function() {
       mixins: {
         Changed: {
           properties: {
-            name: 'changeNickname',
-            nickname: 'changeNickname',
+            name: 'changeName',
+            nickname: 'changeName',
             age: 'changeAge',
             status: 'changeStatus'
           }
@@ -61,9 +61,9 @@ describe('loopback datasource changed property', function() {
     });
 
     // Define a function that should be called when a change is detected.
-    Person.changeNickname = function(args, cb) {
+    Person.changeName = function(args, cb) {
       cb = cb || utils.createPromiseCallback();
-      debug('this.changeNickname() called with %o', args);
+      debug('this.changeName() called with %o', args);
       process.nextTick(function() {
         cb(null);
       });
@@ -93,7 +93,7 @@ describe('loopback datasource changed property', function() {
     // Set up some spies so we can check whether our callbacks have been called.
     this.spyAge = sinon.spy(Person, 'changeAge');
     this.spyStatus = sinon.spy(Person, 'changeStatus');
-    this.spyNickname = sinon.spy(Person, 'changeNickname');
+    this.spyName = sinon.spy(Person, 'changeName');
 
     Person.attachTo(dbConnector);
     app.model(Person);
@@ -118,7 +118,7 @@ describe('loopback datasource changed property', function() {
         var self = this;
       expect(self.spyAge).not.to.have.been.called;
         expect(self.spyStatus).not.to.have.been.called;
-        expect(self.spyNickname).not.to.have.been.called;
+        expect(self.spyName).not.to.have.been.called;
         done();
       });
     });
@@ -130,7 +130,31 @@ describe('loopback datasource changed property', function() {
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run any callbacks if no the skipChanged option was set to true', function(done) {
+        var self = this;
+        this.joe.updateAttribute('name', 'NewName', {skipChanged: true})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run specific callbacks that are marked to be skipped in skipChanged', function(done) {
+        var self = this;
+        this.joe.updateAttribute('name', 'NewName', {skipChanged: ['name']})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
           done();
         })
         .catch(done);
@@ -143,7 +167,7 @@ describe('loopback datasource changed property', function() {
           expect(res.age).to.equal(22);
           expect(self.spyAge).to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
           done();
         })
         .catch(done);
@@ -157,7 +181,31 @@ describe('loopback datasource changed property', function() {
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run any callbacks if no the skipChanged option was set to true', function(done) {
+        var self = this;
+        this.joe.updateAttributes({'name': 'NewName'}, {skipChanged: true})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run specific callbacks that are marked to be skipped in skipChanged', function(done) {
+        var self = this;
+        this.joe.updateAttributes({'name': 'NewName', 'status': 'test'}, {skipChanged: 'name'})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
           done();
         })
         .catch(done);
@@ -171,7 +219,7 @@ describe('loopback datasource changed property', function() {
           expect(res.nickname).to.equal('somename');
           expect(self.spyAge).to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).to.have.been.called;
+          expect(self.spyName).to.have.been.called;
           done();
         })
         .catch(done);
@@ -186,7 +234,34 @@ describe('loopback datasource changed property', function() {
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run any callbacks if no the skipChanged option was set to true', function(done) {
+        var self = this;
+        this.joe.name = 'NewName';
+        this.joe.save({skipChanged: true})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run specific callbacks that are marked to be skipped in skipChanged', function(done) {
+        var self = this;
+        this.joe.name = 'NewName';
+        this.joe.status = 'test';
+        this.joe.save({skipChanged: 'name'})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          expect(self.spyStatus).to.have.been.called;
           done();
         })
         .catch(done);
@@ -199,7 +274,7 @@ describe('loopback datasource changed property', function() {
           .then(function(res) {
             expect(self.spyAge).to.have.been.called;
             expect(self.spyStatus).not.to.have.been.called;
-            expect(self.spyNickname).not.to.have.been.called;
+            expect(self.spyName).not.to.have.been.called;
             done();
           })
           .catch(done);
@@ -213,7 +288,7 @@ describe('loopback datasource changed property', function() {
           .then(function(res) {
             expect(self.spyAge).to.have.been.called;
             expect(self.spyStatus).not.to.have.been.called;
-            expect(self.spyNickname).to.have.been.called;
+            expect(self.spyName).to.have.been.called;
             done();
           })
           .catch(done);
@@ -228,7 +303,34 @@ describe('loopback datasource changed property', function() {
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run any callbacks if no the skipChanged option was set to true', function(done) {
+        var self = this;
+        this.joe.name = 'NewName';
+        this.Person.upsert(this.joe, {skipChanged: true})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run specific callbacks that are marked to be skipped in skipChanged', function(done) {
+        var self = this;
+        this.joe.name = 'NewName';
+        this.joe.status = 'test';
+        this.Person.upsert(this.joe, {skipChanged: 'name'})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          expect(self.spyStatus).to.have.been.called;
           done();
         })
         .catch(done);
@@ -241,7 +343,7 @@ describe('loopback datasource changed property', function() {
           .then(function(res) {
             expect(self.spyAge).not.to.have.been.called;
             expect(self.spyStatus).to.have.been.called;
-            expect(self.spyNickname).not.to.have.been.called;
+            expect(self.spyName).not.to.have.been.called;
             done();
           })
           .catch(done);
@@ -255,7 +357,7 @@ describe('loopback datasource changed property', function() {
           .then(function(res) {
             expect(self.spyAge).to.have.been.called;
             expect(self.spyStatus).to.have.been.called;
-            expect(self.spyNickname).not.to.have.been.called;
+            expect(self.spyName).not.to.have.been.called;
             done();
           })
           .catch(done);
@@ -269,9 +371,33 @@ describe('loopback datasource changed property', function() {
         .then(function(res) {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
-          expect(self.spyNickname).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
           done();
         })
+        .catch(done);
+      });
+
+      it('should not run any callbacks if no the skipChanged option was set to true', function(done) {
+        var self = this;
+        this.Person.updateAll(null, {name: 'NewName'}, {skipChanged: true})
+        .then(function(res) {
+          expect(self.spyAge).not.to.have.been.called;
+          expect(self.spyStatus).not.to.have.been.called;
+          expect(self.spyName).not.to.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should not run specific callbacks that are marked to be skipped in skipChanged', function(done) {
+        var self = this;
+        this.Person.updateAll(null, {name: 'NewName', status: 'test'}, {skipChanged: 'name'})
+          .then(function(res) {
+            expect(self.spyAge).not.to.have.been.called;
+            expect(self.spyName).not.to.have.been.called;
+            expect(self.spyStatus).to.have.been.called;
+            done();
+          })
         .catch(done);
       });
 
@@ -281,7 +407,7 @@ describe('loopback datasource changed property', function() {
           .then(function(res) {
             expect(self.spyAge).not.to.have.been.called;
             expect(self.spyStatus).to.have.been.called;
-            expect(self.spyNickname).not.to.have.been.called;
+            expect(self.spyName).not.to.have.been.called;
             done();
           })
           .catch(done);
@@ -293,7 +419,7 @@ describe('loopback datasource changed property', function() {
           .then(function(res) {
             expect(self.spyAge).to.have.been.called;
             expect(self.spyStatus).to.have.been.called;
-            expect(self.spyNickname).not.to.have.been.called;
+            expect(self.spyName).not.to.have.been.called;
             done();
           })
           .catch(done);

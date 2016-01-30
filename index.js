@@ -33,27 +33,8 @@ function changed(Model, options) {
 
   // This is the structure that we want to return
   function ChangeSet(changeset) {
-    this.ids = changeset.ids;
-    this.values = changeset.values;
+    _.extend(this, changeset);
   }
-  ChangeSet.prototype.getIdList = function() {
-    return Object.keys(this.ids);
-  };
-  ChangeSet.prototype.getIds = function() {
-    return this.ids;
-  };
-  ChangeSet.prototype.getId = function(id) {
-    return this.ids[id];
-  };
-  ChangeSet.prototype.getValueList = function() {
-    return Object.keys(this.values);
-  };
-  ChangeSet.prototype.getValues = function() {
-    return this.values;
-  };
-  ChangeSet.prototype.getValue = function(value) {
-    return this.values[value];
-  };
 
   /**
    * Helper method that converts the set of items to a set of property
@@ -75,16 +56,8 @@ function changed(Model, options) {
    *
    * {
    *    status: {
-   *        ids: {
-   *            '5586c58848fb091e068f8115': 'pending',
-   *            '5586c58848fb091e068f8116': 'pending'
-   *        },
-   *        values: {
-   *            pending: [
-   *                '5586c58848fb091e068f8115',
-   *                '5586c58848fb091e068f8116'
-   *            ]
-   *        }
+   *        '5586c58848fb091e068f8115': 'pending',
+   *        '5586c58848fb091e068f8116': 'pending'
    *    }
    * }
    *
@@ -103,19 +76,11 @@ function changed(Model, options) {
 
         // Add basic structure to hold ids and values
         if (_.isUndefined(result[property])) {
-          result[property] = { ids: {}, values: {} };
-        }
-
-        // Create an array to hold ids for each value
-        if (_.isUndefined(result[property].values[value])) {
-          result[property].values[value] = [];
+          result[property] = {};
         }
 
         // Create an object { itemId: value }
-        result[property].ids[itemId] = value;
-
-        // Enter itemId in the array for this value
-        result[property].values[value].push(itemId);
+        result[property][itemId] = value;
       });
 
     });
@@ -198,9 +163,13 @@ function changed(Model, options) {
           return cb(new Error(util.format('Function %s not found on Model', callback)));
         }
         debug('after save: invoke %s with %o', callback, changeset);
-        Model[callback](changeset).then(function() {
-          cb();
-        }).catch(cb);
+        var res = Model[callback](changeset)
+        // check for a thenable
+        if (res.then) {
+          res.then(function() {
+            cb();
+          }).catch(cb);
+        } else cb()
       }, function(err) {
         if (err) {
           console.error(err);
@@ -403,7 +372,7 @@ function changed(Model, options) {
     _.forEach(properties, function(key) {
       debug('getChangedProperties: - checking property %s ', key);
 
-      if (newVals[key]) {
+      if (newVals[key] !== undefined) {
         var newVal = newVals[key];
         debug('getChangedProperties:   - new value %s ', newVal);
 
@@ -418,7 +387,7 @@ function changed(Model, options) {
       debug('getChangedProperties: Properties were changed %o', changedProperties);
       return changedProperties;
     }
-    return false;
+    return {};
   };
 
   Model.extractChangedItemIds = function(items) {

@@ -44,21 +44,21 @@ function changed(Model, options) {
    * Input:
    *
    * {
-   *    '5586c51948fb091e068f80f4': {
-   *        status: 'pending'
-   *    },
-   *    '5586c51948fb091e068f80f5': {
-   *        status: 'pending'
-   *    }
+   *  '5586c51948fb091e068f80f4': {
+   *    status: 'pending'
+   *  },
+   *  '5586c51948fb091e068f80f5': {
+   *    status: 'pending'
+   *  }
    * }
    *
    * Output:
    *
    * {
-   *    status: {
-   *        '5586c58848fb091e068f8115': 'pending',
-   *        '5586c58848fb091e068f8116': 'pending'
-   *    }
+   *  status: {
+   *    '5586c58848fb091e068f8115': 'pending',
+   *    '5586c58848fb091e068f8116': 'pending'
+   *  }
    * }
    *
    * @returns {{}}
@@ -163,13 +163,15 @@ function changed(Model, options) {
           return cb(new Error(util.format('Function %s not found on Model', callback)));
         }
         debug('after save: invoke %s with %o', callback, changeset);
-        var res = Model[callback](changeset)
+        var res = Model[callback](changeset);
         // check for a thenable
         if (res.then) {
           res.then(function() {
             cb();
           }).catch(cb);
-        } else cb()
+        } else {
+          cb();
+        }
       }, function(err) {
         if (err) {
           console.error(err);

@@ -12,11 +12,11 @@ function changed(Model, options) {
   // the property is not found on the model or the defined callback is not found
   _.mapKeys(options.properties, function(callback, property) {
     if (_.isUndefined(Model.definition.properties[property])) {
-      console.warn('Property %s on %s is undefined', property, Model.modelName);
+      debug('Property %s on %s is undefined', property, Model.modelName);
     }
 
     if (typeof Model[callback] !== 'function') {
-      console.warn('Callback %s for %s is not a model function', callback, property);
+      debug('Callback %s for %s is not a model function', callback, property);
     }
   });
 

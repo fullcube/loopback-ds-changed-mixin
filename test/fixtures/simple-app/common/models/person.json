@@ -1,0 +1,27 @@
+{
+  "name": "Person",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "name": "String",
+    "nickname": "String",
+    "age": "Number",
+    "status": "String"
+  },
+  "validations": [],
+  "relations": {},
+  "methods": {},
+  "mixins": {
+    "Changed": {
+      "properties": {
+        "name": "changeName",
+        "nickname": "changeName",
+        "age": "changeAge",
+        "status": "changeStatus"
+      }
+    }
+  }
+}

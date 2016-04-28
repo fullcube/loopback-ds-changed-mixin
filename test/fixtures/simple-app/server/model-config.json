@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "sources": [
+      "../common/models"
+    ],
+    "mixins": [
+      "../../../../lib"
+    ]
+  },
+  "Person": {
+    "dataSource": "db",
+    "public": true
+  }
+}

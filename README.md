@@ -15,30 +15,29 @@ INSTALL
 npm install --save loopback-ds-changed-mixin
 ```
 
-SERVER.JS
+SERVER CONFIG
 =============
+Add the mixins property to your server/model-config.json:
 
-In your `server/server.js` file add the following line before the
-`boot(app, __dirname);` line.
-
-```javascript
-...
-var app = module.exports = loopback();
-...
-// Add Readonly Mixin to loopback
-require('loopback-ds-changed-mixin')(app);
-
-boot(app, __dirname, function(err) {
-  'use strict';
-  if (err) throw err;
-
-  // start the server if `$ node server.js`
-  if (require.main === module)
-    app.start();
-});
+```
+{
+  "_meta": {
+    "sources": [
+      "loopback/common/models",
+      "loopback/server/models",
+      "../common/models",
+      "./models"
+    ],
+    "mixins": [
+      "loopback/common/mixins",
+      "../node_modules/loopback-ds-changed-mixin/lib",
+      "../common/mixins"
+    ]
+  }
+}
 ```
 
-CONFIG
+MODEL CONFIG
 =============
 
 To use with your Models add the `mixins` attribute to the definition object of
@@ -110,20 +109,20 @@ defined here is the name of the callback method that is invoked when changes on 
 
 ```json
 {
-    "name": "Widget",
-    "properties": {
-        "name": "String",
-        "description": "String",
-        "status": "String"
-    },
-    "mixins": {
-        "Changed": {
-            "properties": {
-                "name": "changeName",
-                "status": "changeStatus",
-            }
-        }
+  "name": "Widget",
+  "properties": {
+      "name": "String",
+      "description": "String",
+      "status": "String"
+  },
+  "mixins": {
+    "Changed": {
+      "properties": {
+        "name": "changeName",
+        "status": "changeStatus",
+      }
     }
+  }
 }
 ```
 

@@ -1,6 +1,8 @@
 CHANGED
 =============
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/fullcube/loopback-ds-changed-mixin.svg)](https://greenkeeper.io/)
+
 This module is designed for the [Strongloop Loopback](https://github.com/strongloop/loopback) framework.
 It provides a mixin that makes it possible to trigger a function if selected
 model properties change.

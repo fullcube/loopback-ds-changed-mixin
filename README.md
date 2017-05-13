@@ -69,7 +69,7 @@ property will be executed with a ChangeSet as a parameter.
 ```javascript
 
 // The ChangeSet object passed here has several helper methods    
-function changeName(changeSet) {
+function changeName(changeSet, oldChangeSet) {
 
     // Return an array of all the ID's in this change set
     changeSet.getIdList();
@@ -92,6 +92,10 @@ function changeName(changeSet) {
     // The raw data is available as well
     changeSet.ids;
     changeSet.values;
+    
+    // oldChangeSet is a similar object providing previous values
+    // Return the previous value (before current update) for a given ID
+    oldChangeSet.getId(id);
 
 }
 

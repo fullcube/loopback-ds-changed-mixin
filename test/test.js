@@ -268,6 +268,14 @@ describe('loopback datasource changed property', function() {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyName).not.to.have.been.called;
           expect(self.spyStatus).to.have.been.called;
+
+          var changeset = self.spyStatus.args[0][0];
+          var oldChangeset = self.spyStatus.args[0][1];
+          var oldVal = oldChangeset.getId(self.joe.id);
+          var newVal = changeset.getId(self.joe.id);
+          expect(oldVal).to.equal('active');
+          expect(newVal).to.equal('test');
+
           done();
         })
         .catch(done);
@@ -333,6 +341,7 @@ describe('loopback datasource changed property', function() {
             expect(self.spyAge).not.to.have.been.called;
             expect(self.spyName).not.to.have.been.called;
             expect(self.spyStatus).to.have.been.called;
+
             done();
           })
         .catch(done);
@@ -345,6 +354,18 @@ describe('loopback datasource changed property', function() {
             expect(self.spyAge).not.to.have.been.called;
             expect(self.spyStatus).to.have.been.called;
             expect(self.spyName).not.to.have.been.called;
+
+            var changeset = self.spyStatus.args[0][0];
+            var oldChangeset = self.spyStatus.args[0][1];
+
+            expect(oldChangeset.getId(self.joe.id)).to.equal('active');
+            expect(changeset.getId(self.joe.id)).to.equal('pending');
+            expect(oldChangeset.getId(self.bilbo.id)).to.equal('active');
+            expect(changeset.getId(self.bilbo.id)).to.equal('pending');
+            // Tina should not have been updated as her status was already 'pending'
+            expect(oldChangeset.getId(self.tina.id)).to.equal(undefined);
+            expect(changeset.getId(self.tina.id)).to.equal(undefined);
+
             done();
           })
           .catch(done);

@@ -129,6 +129,19 @@ describe('loopback datasource changed property', function() {
                 })
                 .catch(done);
       });
+      it('should run the callback after updating a watched property', function(done) {
+        var self = this;
+        this.tina.updateAttribute('flag', true)
+                .then(function(res) {
+                  expect(res.flag).to.equal(true);
+                  expect(self.spyAge).not.to.have.been.called;
+                  expect(self.spyStatus).not.to.have.been.called;
+                  expect(self.spyName).not.to.have.been.called;
+                  expect(self.spyFlag).to.have.been.called;
+                  done();
+                })
+                .catch(done);
+      });
     });
 
     describe('Model.updateAttributes', function() {

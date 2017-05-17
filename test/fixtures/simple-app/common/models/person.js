@@ -21,6 +21,14 @@ module.exports = function(Person) {
     });
     return cb.promise;
   };
+  Person.changeFlag = function(args, cb) {
+    cb = cb || utils.createPromiseCallback();
+    debug('this.changeFlag() called with %o', args);
+    process.nextTick(function() {
+      cb(null);
+    });
+    return cb.promise;
+  };
 
   // Define a function that should be called when a change is detected.
   Person.changeAge = function(args, cb) {

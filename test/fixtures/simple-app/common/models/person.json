@@ -9,7 +9,8 @@
     "name": "String",
     "nickname": "String",
     "age": "Number",
-    "status": "String"
+    "status": "String",
+    "flag": "boolean"
   },
   "validations": [],
   "relations": {},
@@ -20,7 +21,8 @@
         "name": "changeName",
         "nickname": "changeName",
         "age": "changeAge",
-        "status": "changeStatus"
+        "status": "changeStatus",
+        "flag": "changeFlag"
       }
     }
   }

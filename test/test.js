@@ -38,24 +38,26 @@ describe('loopback datasource changed property', function() {
     this.spyAge = this.sinon.spy(app.models.Person, 'changeAge');
     this.spyStatus = this.sinon.spy(app.models.Person, 'changeStatus');
     this.spyName = this.sinon.spy(app.models.Person, 'changeName');
+    this.spyFlag = this.sinon.spy(app.models.Person, 'changeFlag');
   });
 
   lt.beforeEach.withApp(app);
 
   describe('when called internally', function() {
     lt.beforeEach.givenModel('Person',
-      {title: 'Mr', name:'Joe Blogs', nickname: 'joe', age: 21, status: 'active'}, 'joe');
+      {title: 'Mr', name:'Joe Blogs', nickname: 'joe', age: 21, status: 'active', flag: true}, 'joe');
     lt.beforeEach.givenModel('Person',
-      {title: 'Mr', name:'Bilbo Baggins', nickname: 'bilbo', age: 99, status: 'active'}, 'bilbo');
+      {title: 'Mr', name:'Bilbo Baggins', nickname: 'bilbo', age: 99, status: 'active', flag: true}, 'bilbo');
     lt.beforeEach.givenModel('Person',
-      {title: 'Miss', name:'Tina Turner', nickname: 'tina', age: 80, status: 'pending'}, 'tina');
+      {title: 'Miss', name:'Tina Turner', nickname: 'tina', age: 80, status: 'pending', flag: false}, 'tina');
 
     describe('Model.create', function() {
       it('should not run callback when creating new instances.', function(done) {
         var self = this;
-      expect(self.spyAge).not.to.have.been.called;
+        expect(self.spyAge).not.to.have.been.called;
         expect(self.spyStatus).not.to.have.been.called;
         expect(self.spyName).not.to.have.been.called;
+        expect(self.spyFlag).not.to.have.been.called;
         done();
       });
     });
@@ -68,6 +70,7 @@ describe('loopback datasource changed property', function() {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyName).not.to.have.been.called;
+          expect(self.spyFlag).not.to.have.been.called;
           done();
         })
         .catch(done);
@@ -80,6 +83,7 @@ describe('loopback datasource changed property', function() {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyName).not.to.have.been.called;
+          expect(self.spyFlag).not.to.have.been.called;
           done();
         })
         .catch(done);
@@ -92,6 +96,7 @@ describe('loopback datasource changed property', function() {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyName).not.to.have.been.called;
+          expect(self.spyFlag).not.to.have.been.called;
           done();
         })
         .catch(done);
@@ -105,9 +110,37 @@ describe('loopback datasource changed property', function() {
           expect(self.spyAge).to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyName).not.to.have.been.called;
+          expect(self.spyFlag).not.to.have.been.called;
           done();
         })
         .catch(done);
+      });
+
+      it('should run the callback after updating a watched property', function(done) {
+        var self = this;
+        this.joe.updateAttribute('flag', false)
+                .then(function(res) {
+                  expect(res.flag).to.equal(false);
+                  expect(self.spyAge).not.to.have.been.called;
+                  expect(self.spyStatus).not.to.have.been.called;
+                  expect(self.spyName).not.to.have.been.called;
+                  expect(self.spyFlag).to.have.been.called;
+                  done();
+                })
+                .catch(done);
+      });
+      it('should run the callback after updating a watched property', function(done) {
+        var self = this;
+        this.tina.updateAttribute('flag', true)
+                .then(function(res) {
+                  expect(res.flag).to.equal(true);
+                  expect(self.spyAge).not.to.have.been.called;
+                  expect(self.spyStatus).not.to.have.been.called;
+                  expect(self.spyName).not.to.have.been.called;
+                  expect(self.spyFlag).to.have.been.called;
+                  done();
+                })
+                .catch(done);
       });
     });
 
@@ -119,6 +152,7 @@ describe('loopback datasource changed property', function() {
           expect(self.spyAge).not.to.have.been.called;
           expect(self.spyStatus).not.to.have.been.called;
           expect(self.spyName).not.to.have.been.called;
+          expect(self.spyFlag).not.to.have.been.called;
           done();
         })
         .catch(done);

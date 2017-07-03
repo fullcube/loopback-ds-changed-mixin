@@ -21,8 +21,8 @@
   "devDependencies": {
     "bluebird": "3.5.0",
     "chai": "4.0.2",
-    "jscs": "3.0.7",
-    "jshint": "2.9.5",
+    "dirty-chai": "2.0.0",
+    "eslint-config-fullcube": "3.0.0",
     "loopback": "3.8.0",
     "loopback-boot": "2.25.0",
     "loopback-connector-mongodb": "3.2.0",
@@ -33,7 +33,7 @@
     "sinon-chai": "2.11.0"
   },
   "scripts": {
-    "lint": "jscs lib/changed.js && jshint lib/changed.js",
+    "lint": "eslint .",
     "test": "mocha -R spec --timeout 10000 test/test.js",
     "test:watch": "npm run test -- -w",
     "pretest": "npm run lint"

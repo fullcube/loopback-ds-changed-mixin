@@ -19,7 +19,8 @@
     "test:watch": "npm run test -- -w",
     "pretest": "npm run lint",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post",
+    "commitmsg": "validate-commit-msg"
   },
   "dependencies": {
     "async": "2.5.0",
@@ -29,9 +30,11 @@
   "devDependencies": {
     "bluebird": "3.5.0",
     "chai": "4.0.2",
+    "conventional-commit-types": "2.1.0",
     "coveralls": "2.13.1",
     "dirty-chai": "2.0.0",
     "eslint-config-fullcube": "3.0.0",
+    "husky": "0.14.2",
     "loopback": "3.8.0",
     "loopback-boot": "2.25.0",
     "loopback-connector-mongodb": "3.2.0",
@@ -41,6 +44,12 @@
     "nyc": "11.0.3",
     "semantic-release": "6.3.6",
     "sinon": "2.3.6",
-    "sinon-chai": "2.11.0"
+    "sinon-chai": "2.11.0",
+    "validate-commit-msg": "2.12.2"
+  },
+  "config": {
+    "validate-commit-msg": {
+      "types": "conventional-commit-types"
+    }
   }
 }

@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "test": "NODE_ENV=test nyc --reporter=lcov --reporter=text --reporter=text-summary mocha test/*test.js",
     "test:watch": "npm run test -- -w",
-    "pretest": "npm run lint"
+    "pretest": "npm run lint",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "dependencies": {
     "async": "2.5.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "bluebird": "3.5.0",
     "chai": "4.0.2",
+    "coveralls": "2.13.1",
     "dirty-chai": "2.0.0",
     "eslint-config-fullcube": "3.0.0",
     "loopback": "3.8.0",

@@ -1,24 +1,31 @@
-var loopback = require('loopback');
-var boot = require('loopback-boot');
+/* eslint no-console: 0 */
 
-var app = module.exports = loopback();
+const loopback = require('loopback')
+const boot = require('loopback-boot')
 
-app.use('/api', loopback.rest());
+const app = loopback()
+
+app.use('/api', loopback.rest())
 
 app.start = function() {
   // start the web server
   return app.listen(function() {
-    app.emit('started');
-    console.log('Web server listening at: %s', app.get('url'));
-  });
-};
+    app.emit('started')
+    console.log('Web server listening at: %s', app.get('url'))
+  })
+}
 
 // Bootstrap the application, configure models, datasources and middleware.
 // Sub-apps like REST API are mounted via boot scripts.
 boot(app, __dirname, function(err) {
-  if (err) throw err;
+  if (err) {
+    throw err
+  }
 
   // start the server if `$ node server.js`
-  if (require.main === module)
-    app.start();
-});
+  if (require.main === module) {
+    app.start()
+  }
+})
+
+module.exports = app

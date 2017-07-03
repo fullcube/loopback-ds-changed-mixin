@@ -13,6 +13,12 @@
     "type": "git",
     "url": "https://github.com/fullcube/loopback-ds-changed-mixin.git"
   },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "NODE_ENV=test nyc --reporter=lcov --reporter=text --reporter=text-summary mocha test/*test.js",
+    "test:watch": "npm run test -- -w",
+    "pretest": "npm run lint"
+  },
   "dependencies": {
     "async": "2.5.0",
     "debug": "2.6.8",
@@ -29,13 +35,8 @@
     "loopback-testing": "1.4.0",
     "mocha": "3.4.2",
     "mocha-sinon": "2.0.0",
+    "nyc": "11.0.3",
     "sinon": "2.3.6",
     "sinon-chai": "2.11.0"
-  },
-  "scripts": {
-    "lint": "eslint .",
-    "test": "mocha -R spec --timeout 10000 test/test.js",
-    "test:watch": "npm run test -- -w",
-    "pretest": "npm run lint"
   }
 }

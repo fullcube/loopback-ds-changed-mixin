@@ -46,7 +46,7 @@
     "nyc": "11.0.3",
     "semantic-release": "6.3.6",
     "sinon": "2.3.6",
-    "sinon-chai": "2.11.0",
+    "sinon-chai": "2.14.0",
     "validate-commit-msg": "2.12.3"
   },
   "config": {

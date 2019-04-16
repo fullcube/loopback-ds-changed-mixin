@@ -43,7 +43,7 @@
     "loopback-testing": "1.4.0",
     "mocha": "3.4.2",
     "mocha-sinon": "2.0.0",
-    "nyc": "11.0.3",
+    "nyc": "14.0.0",
     "semantic-release": "6.3.6",
     "sinon": "2.3.6",
     "sinon-chai": "2.11.0",

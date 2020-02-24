@@ -23,7 +23,7 @@
     "commitmsg": "validate-commit-msg"
   },
   "dependencies": {
-    "async": "2.5.0",
+    "async": "3.2.0",
     "debug": "2.6.8",
     "lodash": "4.17.4"
   },
